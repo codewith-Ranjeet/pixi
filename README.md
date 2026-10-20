@@ -52,7 +52,7 @@ Unlike massive LLMs that require high-end server clusters, Pixi-40M:
 | **Total Parameters** | **40,512,000** | Exact verified parameter count (~40.5M) |
 | **Hidden Dimension ($d_{\text{model}}$)** | **512** | Model width across all layers |
 | **Layers ($L$)** | **10** | Transformer decoder blocks |
-| **Attention Heads ($H$)** | **8** | Multi-Head Attention ($\text{head\_dim} = 64$) |
+| **Attention Heads ($H$)** | **8** | Multi-Head Attention (head_dim = 64) |
 | **Intermediate Dimension ($d_{\text{ff}}$)** | **1,408** | SwiGLU projection dimension ($\approx \frac{8}{3} \times d_{\text{model}}$) |
 | **Vocabulary Size ($V$)** | **16,384** | Byte-Level BPE with ChatML control tokens |
 | **Context Window ($T$)** | **1,024** | Tokens (expandable to 2,048) |

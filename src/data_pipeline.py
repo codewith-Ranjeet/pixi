@@ -1,4 +1,5 @@
 import os
+import glob
 import json
 import numpy as np
 import torch
@@ -59,7 +60,7 @@ def build_pretrain_bin(tokenizer_path: str, text_files: list[str], bin_path: str
             np.array(buffer, dtype=np.uint16).tofile(f_out)
 
 class ShardedMemmapDataset(Dataset):
-    """Zero-copy memory-mapped dataset for causal pre-training."""
+    """Zero-copy memory-mapped dataset for a single binary shard."""
     def __init__(self, bin_path: str, seq_len: int):
         self.seq_len = seq_len
         self.data = np.memmap(bin_path, dtype=np.uint16, mode="r")
@@ -72,6 +73,30 @@ class ShardedMemmapDataset(Dataset):
         start = idx * self.seq_len
         end = start + self.seq_len + 1
         chunk = torch.from_numpy(self.data[start:end].astype(np.int64))
+        return chunk[:-1], chunk[1:]
+
+class ShardedDirectoryDataset(Dataset):
+    """Memory-mapped reader iterating across multiple pre-tokenized binary shards in a directory."""
+    def __init__(self, shard_glob: str, seq_len: int = 1024):
+        self.seq_len = seq_len
+        self.files = sorted(glob.glob(shard_glob))
+        assert len(self.files) > 0, f"No binary shards found matching pattern: {shard_glob}"
+
+        self.shards = [np.memmap(f, dtype=np.uint16, mode="r") for f in self.files]
+        self.shard_samples = [(len(s) - 1) // seq_len for s in self.shards]
+        self.total_samples = sum(self.shard_samples)
+
+    def __len__(self) -> int:
+        return self.total_samples
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        shard_idx = 0
+        while idx >= self.shard_samples[shard_idx]:
+            idx -= self.shard_samples[shard_idx]
+            shard_idx += 1
+        start = idx * self.seq_len
+        end = start + self.seq_len + 1
+        chunk = torch.from_numpy(self.shards[shard_idx][start:end].astype(np.int64))
         return chunk[:-1], chunk[1:]
 
 class ChatMLDataset(Dataset):

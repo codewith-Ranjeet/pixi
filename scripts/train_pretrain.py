@@ -2,51 +2,20 @@
 Pre-training Script for Pixi-40M
 Optimized for NVIDIA RTX 3050 6GB (Ampere)
 """
-import glob
 import math
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 import time
-import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
-try:
-    from src.model import Pixi, PixiConfig, MicroChat, MicroChatConfig
-except ImportError:
-    from model import Pixi, PixiConfig, MicroChat, MicroChatConfig
-try:
-    from src.trainer import build_optimizer, get_cosine_lr
-except ImportError:
-    from train import build_optimizer, get_cosine_lr
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-class ShardedDirectoryDataset(Dataset):
-    """Memory-mapped reader iterating over pre-tokenized binary shards."""
-    def __init__(self, shard_glob: str, seq_len: int = 1024):
-        self.seq_len = seq_len
-        self.files = sorted(glob.glob(shard_glob))
-        assert len(self.files) > 0, f"No binary shards found at {shard_glob}"
-
-        self.shards = [np.memmap(f, dtype=np.uint16, mode="r") for f in self.files]
-        self.shard_samples = [(len(s) - 1) // seq_len for s in self.shards]
-        self.total_samples = sum(self.shard_samples)
-        print(f"Loaded {len(self.files)} shards with {self.total_samples:,} sequences ({self.total_samples * seq_len:,} tokens).")
-
-    def __len__(self):
-        return self.total_samples
-
-    def __getitem__(self, idx):
-        curr = 0
-        for shard, num_samples in zip(self.shards, self.shard_samples):
-            if idx < curr + num_samples:
-                start = (idx - curr) * self.seq_len
-                end = start + self.seq_len + 1
-                chunk = torch.from_numpy(shard[start:end].astype(np.int64))
-                return chunk[:-1], chunk[1:]
-            curr += num_samples
-        raise IndexError("Sample index out of bounds")
+from src.model import Pixi, PixiConfig
+from src.data_pipeline import ShardedDirectoryDataset
+from src.trainer import build_optimizer, get_cosine_lr
 
 def pretrain():
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -63,6 +32,8 @@ def pretrain():
     max_lr = 6e-4
     min_lr = 6e-5
     save_every = 1000         # Checkpoint every 1,000 steps
+    data_glob = os.path.join(PROJECT_ROOT, "data", "pretrain_bins", "shard_*.bin")
+    checkpoint_dir = os.path.join(PROJECT_ROOT, "checkpoints", "pretrain")
     # ----------------------------------------------------------------------------
 
     # Instantiate Model
@@ -76,11 +47,11 @@ def pretrain():
     autocast_dtype = torch.bfloat16 if (device == "cuda" and torch.cuda.is_bf16_supported()) else torch.float16
     scaler = torch.amp.GradScaler('cuda', enabled=(autocast_dtype == torch.float16 and device == "cuda"))
 
-    dataset = ShardedDirectoryDataset("data/pretrain_bins/shard_*.bin", seq_len=seq_len)
+    dataset = ShardedDirectoryDataset(data_glob, seq_len=seq_len)
     loader = DataLoader(dataset, batch_size=micro_batch_size, shuffle=True, drop_last=True)
     data_iter = iter(loader)
 
-    os.makedirs("checkpoints/pretrain", exist_ok=True)
+    os.makedirs(checkpoint_dir, exist_ok=True)
     model.train()
     running_loss = 0.0
     t0 = time.time()
@@ -137,7 +108,7 @@ def pretrain():
 
         # Save Checkpoint
         if step % save_every == 0 or step == max_steps:
-            ckpt_file = f"checkpoints/pretrain/pixi_step_{step}.pt"
+            ckpt_file = os.path.join(checkpoint_dir, f"pixi_step_{step}.pt")
             torch.save({
                 "step": step,
                 "model_state_dict": model.state_dict(),
@@ -150,4 +121,6 @@ def pretrain():
     print("\nPre-training completed successfully!")
 
 if __name__ == "__main__":
+    pretrain()
+
     pretrain()

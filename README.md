@@ -90,6 +90,7 @@ pixi/
 ├── scripts/                     # Standalone automation & workflow scripts
 │   ├── prepare_data.py          # Hugging Face dataset downloader and binary shard packager
 │   ├── train_pretrain.py        # Pre-training execution script for RTX 3050
+│   ├── train_sft.py             # Supervised instruction fine-tuning script
 │   └── verify_pipeline.py       # End-to-end prototype demo and test script
 ├── cpp/                         # High-performance native C++ inference engine
 │   ├── pixi_infer.cpp      # Zero-copy AVX2/FMA/F16C SIMD runner
@@ -113,7 +114,8 @@ pixi/
 ├── .gitignore                   # Git exclusion rules for large binaries
 ├── plan.md                      # Detailed engineering log & milestone audit
 ├── README.md                    # Project documentation (this file)
-└── run_pretrain.py              # Root launcher for pre-training
+├── chat.py                      # Interactive terminal chat client
+└── chat_base.py                 # Base model testing script
 ```
 
 ---
@@ -202,7 +204,7 @@ This extracts text from `HuggingFaceFW/fineweb-edu`, tokenizes it, and outputs b
 Launch causal next-token pre-training on your RTX 3050 GPU:
 
 ```powershell
-python run_pretrain.py
+python scripts/train_pretrain.py
 ```
 
 * **Batch Size**: 8 micro-batch $\times$ 8 gradient accumulation steps = **65,536 tokens per optimizer step**.
@@ -219,21 +221,60 @@ python run_pretrain.py
 
 ### Step 5: Supervised Fine-Tuning (SFT)
 
-Transform the base pre-trained model into an obedient conversational agent using **ChatML formatting**:
 
-```text
-<|im_start|>system
-You are Pixi, a helpful English AI assistant.<|im_end|>
-<|im_start|>user
-What causes rain?<|im_end|>
-<|im_start|>assistant
-Rain occurs when atmospheric water vapor condenses into water droplets that fall under gravity.<|im_end|>
-```
+
+Transform the base pre-trained text completer into an obedient, conversational assistant using **ChatML formatting**:
+
+
+
+`powershell
+
+python scripts/train_sft.py
+
+`
+
+
+
+This fine-tunes checkpoints/pretrain/pixi_step_10000.pt on dialogue dataset data/chat_sft.jsonl, saves the conversational checkpoint checkpoints/pixi_chat_sft.pt, and automatically exports the standalone models/pixi-40m-q8_0.gguf container.
+
+
 
 > [!IMPORTANT]
-> **Prompt Masking**: [`ChatMLDataset`](file:///c:/workspace/pixi/src/data_pipeline.py) automatically masks all system and user prompt tokens with `labels = -100`. Loss is computed **strictly on the assistant's tokens and closing `<|im_end|>`**, preventing the model from regurgitating user inputs.
+
+> **Prompt Masking**: [ChatMLDataset](file:///c:/workspace/pixi/src/data_pipeline.py) automatically masks all system and user prompt tokens with labels = -100. Loss is computed **strictly on the assistant's tokens and closing <|im_end|>**, preventing the model from regurgitating user inputs.
+
+
 
 ---
+
+
+
+### Step 6: Interactive Terminal Chat with Pixi
+
+
+
+Converse directly with your trained model in real time with token streaming:
+
+
+
+`powershell
+
+# Interactive Terminal Chat with token streaming
+
+python chat.py
+
+
+
+# Optional: customize temperature or max tokens
+
+python chat.py --temp 0.7 --top_p 0.9 --max_tokens 200
+
+`
+
+
+
+---
+
 
 ### Step 6: Alignment via DPO
 

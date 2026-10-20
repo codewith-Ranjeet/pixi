@@ -3,21 +3,29 @@ Downloads FineWeb-Edu / TinyStories from Hugging Face,
 tokenizes using tokenizer.json, and streams into uint16 binary shards.
 """
 import os
+import sys
 import numpy as np
 from datasets import load_dataset
 from tokenizers import Tokenizer
 from tqdm import tqdm
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 def build_dataset_shards(
     dataset_name="HuggingFaceFW/fineweb-edu",
     dataset_config="sample-10BT",
-    tokenizer_path = None,
-    output_dir="data/pretrain_bins",
+    tokenizer_path=None,
+    output_dir=None,
     target_tokens=500_000_000,    # 500M tokens for a strong base model (adjust as needed)
     shard_size=50_000_000         # 50M tokens per shard (~100 MB per file)
 ):
     if tokenizer_path is None:
-        tokenizer_path = "tokenizer/tokenizer.json" if os.path.exists("tokenizer/tokenizer.json") else "tokenizer.json"
+        tokenizer_path = os.path.join(PROJECT_ROOT, "tokenizer", "tokenizer.json")
+    if output_dir is None:
+        output_dir = os.path.join(PROJECT_ROOT, "data", "pretrain_bins")
+
     os.makedirs(output_dir, exist_ok=True)
     tok = Tokenizer.from_file(tokenizer_path)
     eos_id = tok.token_to_id("<|eos|>")
@@ -60,4 +68,6 @@ def build_dataset_shards(
     print(f"\nDone! Extracted {total_tokens:,} tokens across {shard_idx + 1} shards in {output_dir}")
 
 if __name__ == "__main__":
+    build_dataset_shards()
+
     build_dataset_shards()

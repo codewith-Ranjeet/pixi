@@ -192,28 +192,63 @@ pixi/
 ├── .gitignore             # Exclusion rules for large binaries and caches
 ├── plan.md                # This comprehensive engineering log
 ├── README.md              # Public repository documentation
-└── run_pretrain.py        # Root execution launcher
+├── chat.py                # Interactive terminal chat client
+└── chat_base.py           # Base model testing script
 ```
 
 ---
 
 ## 🚀 Phase 8: Execution Instructions & Subsequent Roadmap
 
-### 1. Launching Full Pre-training
-Run pre-training using your RTX 3050 GPU:
-```powershell
-python run_pretrain.py
-```
-* **Step 1**: Loss starts around $\sim 9.70$ ($\ln(16384)$).
-* **Step 500**: Drops to $\sim 5.5 - 6.0$.
-* **Step 2,500**: Drops to $\sim 3.8$.
-* **Step 10,000**: Settles around $\sim 2.6 - 3.0$ (fluent English text completion).
+### 1. Pre-training: COMPLETED
 
-### 2. Phase 9: Supervised Fine-Tuning (SFT)
-Once pre-training completes, fine-tune the resulting base checkpoint on 50,000+ multi-turn ChatML dialogues (e.g. UltraChat or SmolTalk) using [`ChatMLDataset`](file:///c:/workspace/pixi/src/data_pipeline.py) with prompt loss masking.
+* Checkpoint: checkpoints/pretrain/pixi_step_10000.pt (486 MB)
 
-### 3. Phase 10: Direct Preference Optimization (DPO)
-Align conversational preferences using [`dpo_train_step`](file:///c:/workspace/pixi/src/trainer.py) on paired chosen vs. rejected responses to eliminate repetitive loops and enhance helpfulness.
+* Final Loss: **1.3700** (converged from 9.70 initial cross-entropy).
 
-### 4. Phase 11: Final Deployment
-Re-quantize the aligned checkpoint into GGUF Q8_0 format via [`export_to_gguf_q8_0`](file:///c:/workspace/pixi/src/export_and_infer.py) and serve natively via [`cpp/pixi_infer.exe`](file:///c:/workspace/pixi/cpp/pixi_infer.exe) for sub-15ms conversational responses.
+* Result: Fluent English base text representation across grammar, vocabulary, and world knowledge.
+
+
+
+### 2. Phase 9: Supervised Fine-Tuning (SFT) - READY
+
+* Run conversational fine-tuning:
+
+  `powershell
+
+  python scripts/train_sft.py
+
+  `
+
+* Trains on data/chat_sft.jsonl using [ChatMLDataset](file:///c:/workspace/pixi/src/data_pipeline.py) with prompt masking (loss computed only on assistant tokens).
+
+* Saves fine-tuned checkpoint: checkpoints/pixi_chat_sft.pt.
+
+* Automatically exports quantized GGUF model: models/pixi-40m-q8_0.gguf.
+
+
+
+### 3. Phase 10: Interactive Chat & Native Inference
+
+* **Terminal Chat (Token Streaming)**:
+
+  `powershell
+
+  python chat.py
+
+  `
+
+* **C++ AVX2 Native Runner (270+ tok/s)**:
+
+  `powershell
+
+  .\cpp\pixi_infer.exe models\pixi-40m-q8_0.gguf
+
+  `
+
+
+
+### 4. Phase 11: Direct Preference Optimization (DPO) & Future Scaling
+
+* Align conversational preferences using [dpo_train_step](file:///c:/workspace/pixi/src/trainer.py) on paired chosen vs. rejected responses to eliminate repetitive loops and enhance helpfulness.
+

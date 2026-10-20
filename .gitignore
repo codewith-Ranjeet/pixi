@@ -1,0 +1,68 @@
+# ==============================================================================
+# Pixi-40M .gitignore
+# ==============================================================================
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+.pytest_cache/
+.coverage
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Large Model Weights & Checkpoints (exclude large binaries, preserve directory)
+checkpoints/*.pt
+checkpoints/pretrain/*.pt
+*.pt
+*.pth
+*.bin
+*.safetensors
+!data/*.jsonl
+!data/*.txt
+
+# Large Pre-training Binary Shards
+data/pretrain_bins/
+*.bin
+
+# GGUF / GGML Model Binaries
+models/*.gguf
+*.gguf
+
+# C++ Compiled Binaries & Object Files
+cpp/*.exe
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+*.pdb
+
+# Training Logs & Profiling
+*.log
+wandb/
+.system_generated/
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Private or unreviewed training datasets
+data/chat_sft.jsonl
+data/raw_corpus.txt

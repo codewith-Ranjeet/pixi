@@ -4,7 +4,7 @@ from src.model import Pixi, PixiConfig
 from src.export_and_infer import generate_chat
 
 
-CHECKPOINT = "checkpoints/pretrain/pixi_step_10000.pt"
+CHECKPOINT = "checkpoints/pretrain_next/pixi_step_10000.pt"
 TOKENIZER_PATH = "tokenizer/tokenizer.json"
 
 
@@ -42,7 +42,7 @@ def main():
 
     print(f"Checkpoint step: {checkpoint['step']}")
     print(f"Saved training loss: {checkpoint['loss']}")
-    print("Pixi is ready! Type /exit to quit.\n")
+    print("Base-model completion mode (not instruction-tuned). Type /exit to quit.\n")
 
     while True:
         user_text = input("You: ").strip()
@@ -54,12 +54,8 @@ def main():
         if not user_text:
             continue
 
-        # Format the input using Pixi's ChatML-style conversation format.
-        prompt = (
-            "<|im_start|>user\n"
-            f"{user_text}<|im_end|>\n"
-            "<|im_start|>assistant\n"
-        )
+        # Evaluate the raw pretrained base model as a text completer.
+        prompt = user_text
 
         prompt_ids = tokenizer.encode(prompt).ids
 
@@ -72,15 +68,15 @@ def main():
             output_ids = generate_chat(
                 model,
                 prompt_ids,
-                max_new_tokens=256,
-                temperature=0.7,
-                top_p=0.9,
+                max_new_tokens=128,
+                temperature=0.0,
+                top_p=1.0,
                 device=device,
             )
 
         # Hide special tokens in the displayed response.
         response = tokenizer.decode(output_ids, skip_special_tokens=True)
-        print(f"Pixi: {response}\n")
+        print(f"Completion: {response}\n")
 
 
 if __name__ == "__main__":

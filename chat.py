@@ -1,6 +1,6 @@
 """
 Interactive Terminal Chat Interface for Pixi-40M
-Supports multi-turn conversation, streaming token generation, and customizable parameters.
+Uses multi-turn ChatML prompts matching the OASST1 SFT data.
 """
 
 import os
@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src"
 
 from src.model import Pixi, PixiConfig
 
-DEFAULT_SYSTEM_PROMPT = "You are Pixi, a friendly, concise, and intelligent English AI assistant."
+DEFAULT_SYSTEM_PROMPT = "You are Pixi, a friendly and intelligent English AI assistant."
 
 def load_pixi_model(checkpoint_path: str, device: str):
     if not os.path.exists(checkpoint_path):
@@ -94,7 +94,7 @@ def main():
     parser = argparse.ArgumentParser(description="Chat interactively with Pixi-40M in your terminal.")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to checkpoint (.pt)")
     parser.add_argument("--tokenizer", type=str, default="tokenizer/tokenizer.json", help="Path to tokenizer.json")
-    parser.add_argument("--temp", type=float, default=0.7, help="Sampling temperature (default: 0.7)")
+    parser.add_argument("--temp", type=float, default=0.0, help="Sampling temperature (default: 0.0, greedy)")
     parser.add_argument("--top_p", type=float, default=0.9, help="Top-p nucleus sampling (default: 0.9)")
     parser.add_argument("--max_tokens", type=int, default=150, help="Max new tokens per reply")
     parser.add_argument("--device", type=str, default=None, help="Device ('cuda' or 'cpu')")
@@ -110,8 +110,13 @@ def main():
     checkpoint_path = args.checkpoint
     is_base_model = False
     if checkpoint_path is None:
-        if os.path.exists("checkpoints/pixi_chat_sft.pt"):
-            checkpoint_path = "checkpoints/pixi_chat_sft.pt"
+        if os.path.exists("checkpoints/pixi_chat_sft_pretrain_next.pt"):
+            checkpoint_path = "checkpoints/pixi_chat_sft_pretrain_next.pt"
+        elif os.path.exists("checkpoints/pixi_chat_sft_oasst1.pt"):
+            checkpoint_path = "checkpoints/pixi_chat_sft_oasst1.pt"
+        elif os.path.exists("checkpoints/pretrain_next/pixi_step_10000.pt"):
+            checkpoint_path = "checkpoints/pretrain_next/pixi_step_10000.pt"
+            is_base_model = True
         elif os.path.exists("checkpoints/pretrain/pixi_step_10000.pt"):
             checkpoint_path = "checkpoints/pretrain/pixi_step_10000.pt"
             is_base_model = True
@@ -132,7 +137,7 @@ def main():
         print("  [Note: This is the raw base pre-trained model. Run 'python run_sft.py'")
         print("   to fine-tune Pixi into a dedicated conversational assistant!]")
     print(f"• Sampling: Temperature={args.temp}, Top-P={args.top_p}")
-    print("• Commands: /clear (reset chat), /temp <val>, /exit or /quit")
+    print("• Commands: /clear (reset conversation), /temp <val>, /exit or /quit")
     print("=" * 65)
 
     # Load tokenizer and model
@@ -141,9 +146,9 @@ def main():
 
     im_start = "<|im_start|>"
     im_end = "<|im_end|>"
-    history = []
     temp = args.temp
     top_p = args.top_p
+    history = []
 
     while True:
         try:
@@ -161,7 +166,7 @@ def main():
 
         if user_input.lower() in ("/clear", "/reset"):
             history.clear()
-            print("🧹 Conversation reset.")
+            print("Conversation reset.")
             continue
 
         if user_input.lower().startswith("/temp"):
@@ -178,49 +183,54 @@ def main():
 
         if user_input.lower() == "/help":
             print("Commands:")
-            print("  /clear      - Reset conversation history")
+            print("  /clear      - Clear conversation context")
             print("  /temp <val> - Change sampling temperature")
             print("  /exit       - Quit the chat")
             continue
 
-        # Add to history
-        history.append({"role": "user", "content": user_input})
-
-        # Format full conversation with ChatML
-        prompt = f"{im_start}system\n{DEFAULT_SYSTEM_PROMPT}{im_end}\n"
-        for turn in history:
-            prompt += f"{im_start}{turn['role']}\n{turn['content']}{im_end}\n"
-        prompt += f"{im_start}assistant\n"
-
-        prompt_ids = tokenizer.encode(prompt).ids
-
-        # Safeguard sequence length
-        if len(prompt_ids) + args.max_tokens > config.max_seq_len:
-            # Drop older turns if exceeding context
-            while len(history) > 1 and len(prompt_ids) + args.max_tokens > config.max_seq_len:
-                history.pop(0)
-                prompt = f"{im_start}system\n{DEFAULT_SYSTEM_PROMPT}{im_end}\n"
-                for turn in history:
-                    prompt += f"{im_start}{turn['role']}\n{turn['content']}{im_end}\n"
-                prompt += f"{im_start}assistant\n"
-                prompt_ids = tokenizer.encode(prompt).ids
+        history.append(("user", user_input))
+        generation_budget = max(1, min(args.max_tokens, config.max_seq_len - 1))
+        max_prompt_tokens = config.max_seq_len - generation_budget
+        system_ids = tokenizer.encode(f"{im_start}system\n{DEFAULT_SYSTEM_PROMPT}{im_end}\n").ids
+        # Keep the most recent complete turns that fit the context window.
+        kept_turns = []
+        for user_text, assistant_text in reversed([
+            (history[i][1], history[i + 1][1])
+            for i in range(0, len(history) - 1, 2)
+            if history[i][0] == "user" and history[i + 1][0] == "assistant"
+        ]):
+            turn = f"{im_start}user\n{user_text}{im_end}\n{im_start}assistant\n{assistant_text}{im_end}\n"
+            candidate = tokenizer.encode(turn).ids
+            if len(system_ids) + sum(len(ids) for ids in kept_turns) + len(candidate) > max_prompt_tokens:
+                break
+            kept_turns.insert(0, candidate)
+        current_user_ids = tokenizer.encode(f"{im_start}user\n{user_input}{im_end}\n{im_start}assistant\n").ids
+        while kept_turns and len(system_ids) + sum(len(ids) for ids in kept_turns) + len(current_user_ids) > max_prompt_tokens:
+            kept_turns.pop(0)
+        if len(system_ids) + len(current_user_ids) > max_prompt_tokens:
+            prefix = tokenizer.encode(f"{im_start}user\n").ids
+            suffix = tokenizer.encode(f"{im_end}\n{im_start}assistant\n").ids
+            content = tokenizer.encode(user_input).ids
+            budget = max(0, max_prompt_tokens - len(system_ids) - len(prefix) - len(suffix))
+            current_user_ids = prefix + (content[-budget:] if budget else []) + suffix
+        prompt_ids = system_ids + [token for turn_ids in kept_turns for token in turn_ids] + current_user_ids
 
         print("\nPixi > ", end="", flush=True)
-        assistant_reply = ""
+        response_parts = []
         for chunk in stream_generate(
             model,
             tokenizer,
             prompt_ids,
-            max_new_tokens=args.max_tokens,
+            max_new_tokens=generation_budget,
             temperature=temp,
             top_p=top_p,
             device=device,
         ):
+            response_parts.append(chunk)
             print(chunk, end="", flush=True)
-            assistant_reply += chunk
         print()
+        history.append(("assistant", "".join(response_parts)))
 
-        history.append({"role": "assistant", "content": assistant_reply.strip()})
 
 if __name__ == "__main__":
     main()

@@ -1,149 +1,141 @@
-"""
-Supervised Fine-Tuning (SFT / Chat Tuning) for Pixi-40M
-Transforms the pre-trained base model into an interactive conversational AI.
-"""
+"""Supervised fine-tuning for Pixi-40M using ChatML conversation data."""
 
 import os
 import sys
 import time
-import math
+
 import torch
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from tokenizers import Tokenizer
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from src.model import Pixi, PixiConfig
 from src.data_pipeline import ChatMLDataset
-from src.trainer import build_optimizer, get_cosine_lr
 from src.export_and_infer import export_to_gguf_q8_0, generate_chat
-from tokenizers import Tokenizer
+from src.model import Pixi, PixiConfig
+from src.trainer import build_optimizer, get_cosine_lr
+
 
 def run_sft(
     base_checkpoint=None,
     data_path=None,
+    validation_data_path=None,
     tokenizer_path=None,
     output_checkpoint=None,
     output_gguf=None,
-    epochs=5,
+    epochs=1,
     batch_size=4,
     learning_rate=3e-5,
-    max_seq_len=256,
+    max_seq_len=512,
 ):
-    if base_checkpoint is None:
-        base_checkpoint = os.path.join(PROJECT_ROOT, "checkpoints", "pretrain", "pixi_step_10000.pt")
-    if data_path is None:
-        data_path = os.path.join(PROJECT_ROOT, "data", "chat_sft.jsonl")
-    if tokenizer_path is None:
-        tokenizer_path = os.path.join(PROJECT_ROOT, "tokenizer", "tokenizer.json")
-    if output_checkpoint is None:
-        output_checkpoint = os.path.join(PROJECT_ROOT, "checkpoints", "pixi_chat_sft.pt")
-    if output_gguf is None:
-        output_gguf = os.path.join(PROJECT_ROOT, "models", "pixi-40m-q8_0.gguf")
+    base_checkpoint = base_checkpoint or os.path.join(PROJECT_ROOT, "checkpoints", "pretrain_next", "pixi_step_10000.pt")
+    data_path = data_path or os.path.join(PROJECT_ROOT, "data", "chat_sft_oasst1_train.jsonl")
+    validation_data_path = validation_data_path or os.path.join(PROJECT_ROOT, "data", "chat_sft_oasst1_validation.jsonl")
+    tokenizer_path = tokenizer_path or os.path.join(PROJECT_ROOT, "tokenizer", "tokenizer.json")
+    output_checkpoint = output_checkpoint or os.path.join(PROJECT_ROOT, "checkpoints", "pixi_chat_sft_pretrain_next.pt")
+    output_gguf = output_gguf or os.path.join(PROJECT_ROOT, "models", "pixi-40m-chat-pretrain-next-oasst1-q8_0.gguf")
+
+    for path in (base_checkpoint, data_path, validation_data_path, tokenizer_path):
+        if not os.path.isfile(path):
+            raise FileNotFoundError(path)
+    if os.path.exists(output_checkpoint) or os.path.exists(output_gguf):
+        raise FileExistsError("Refusing to overwrite an SFT checkpoint or GGUF; choose new output paths.")
+    if epochs < 1 or batch_size < 1 or max_seq_len < 2:
+        raise ValueError("epochs, batch_size, and max_seq_len must be positive (max_seq_len >= 2).")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("=" * 70)
-    print("🤖 Pixi-40M: Supervised Instruction Fine-Tuning (SFT)")
-    print("=" * 70)
-    print(f"[Device] Running on: {device.upper()}")
-    if device == "cuda":
-        print(f"[GPU] {torch.cuda.get_device_name(0)} (VRAM: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.1f} GB)")
-
-    # 1. Load Pre-trained Base Model
-    print(f"\n[1/5] Loading pre-trained base model: {base_checkpoint}...")
-    assert os.path.exists(base_checkpoint), f"Base checkpoint not found at {base_checkpoint}!"
+    print(f"[Device] {device.upper()}" + (f" ({torch.cuda.get_device_name(0)})" if device == "cuda" else ""))
+    print(f"[Base] {base_checkpoint}")
     ckpt = torch.load(base_checkpoint, map_location=device, weights_only=False)
     config = ckpt.get("config", PixiConfig(vocab_size=16384, d_model=512, n_layers=10, n_heads=8, d_ff=1408, max_seq_len=1024))
     model = Pixi(config).to(device)
+    model.load_state_dict(ckpt.get("model_state_dict", ckpt))
 
-    state_dict = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
-    model.load_state_dict(state_dict)
-    print(f"  Successfully loaded base weights! Pre-training loss was: {ckpt.get('loss', 'N/A'):.4f}")
-
-    # 2. Prepare Conversational Dataset with Masked Loss
-    print(f"\n[2/5] Preparing ChatML conversational dataset from {data_path}...")
-    dataset = ChatMLDataset(data_path, tokenizer_path=tokenizer_path, max_len=max_seq_len)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-    total_steps = len(loader) * epochs
+    train_data = ChatMLDataset(data_path, tokenizer_path=tokenizer_path, max_len=max_seq_len)
+    val_data = ChatMLDataset(validation_data_path, tokenizer_path=tokenizer_path, max_len=max_seq_len)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=True)
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, drop_last=False)
+    if not len(train_loader) or not len(val_loader):
+        raise ValueError("Train and validation sets must each provide at least one batch.")
+    total_steps = len(train_loader) * epochs
     warmup_steps = int(0.1 * total_steps)
+    print(f"[Data] {len(train_data)} train, {len(val_data)} validation conversations; {epochs} epoch(s), {total_steps} steps")
 
-    print(f"  Loaded {len(dataset)} dialogue sequences | {epochs} epochs | {total_steps} total steps")
-    print(f"  Prompt masking enabled: Loss is ONLY calculated on assistant responses.")
-
-    # 3. Optimizer & Training Loop
     optimizer = build_optimizer(model, lr=learning_rate, weight_decay=0.01)
-    autocast_dtype = torch.bfloat16 if (device == "cuda" and torch.cuda.is_bf16_supported()) else torch.float16
-    scaler = torch.amp.GradScaler('cuda', enabled=(autocast_dtype == torch.float16 and device == "cuda"))
-
-    print(f"\n[3/5] Starting Fine-Tuning (Peak LR: {learning_rate:.1e})...")
-    model.train()
+    amp_dtype = torch.bfloat16 if device == "cuda" and torch.cuda.is_bf16_supported() else torch.float16
+    scaler = torch.amp.GradScaler("cuda", enabled=(device == "cuda" and amp_dtype == torch.float16))
     global_step = 0
-    t0 = time.time()
-
+    final_train_loss = float("nan")
+    validation_loss = float("nan")
+    started = time.time()
     for epoch in range(1, epochs + 1):
-        epoch_loss = 0.0
-        for batch_idx, (x, y) in enumerate(loader):
-            global_step += 1
-            lr = get_cosine_lr(global_step - 1, warmup_steps, total_steps, learning_rate, min_lr=learning_rate * 0.1)
-            for param_group in optimizer.param_groups:
-                param_group["lr"] = lr
-
-            x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
+        model.train()
+        train_sum = 0.0
+        for x, y in train_loader:
+            lr = get_cosine_lr(global_step, warmup_steps, total_steps, learning_rate, min_lr=learning_rate * 0.1)
+            for group in optimizer.param_groups:
+                group["lr"] = lr
+            x, y = x.to(device), y.to(device)
             optimizer.zero_grad(set_to_none=True)
-
-            with torch.autocast(device_type=device, dtype=autocast_dtype):
+            with torch.autocast(device_type=device, dtype=amp_dtype, enabled=device == "cuda"):
                 _, loss, _ = model(x, labels=y)
-
+            if not torch.isfinite(loss):
+                raise RuntimeError(f"Non-finite training loss at step {global_step + 1}: {loss.item()}")
             if scaler.is_enabled():
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step()
+            train_sum += loss.item()
+            global_step += 1
+            if global_step % 25 == 0 or global_step == total_steps:
+                print(f"step {global_step}/{total_steps}: loss={loss.item():.4f}, lr={lr:.2e}")
+        final_train_loss = train_sum / len(train_loader)
 
-            epoch_loss += loss.item()
+        model.eval()
+        loss_sum = 0.0
+        token_count = 0
+        with torch.inference_mode():
+            for x, y in val_loader:
+                x, y = x.to(device), y.to(device)
+                with torch.autocast(device_type=device, dtype=amp_dtype, enabled=device == "cuda"):
+                    _, loss, _ = model(x, labels=y)
+                n = (y != -100).sum().item()
+                loss_sum += loss.item() * n
+                token_count += n
+        validation_loss = loss_sum / max(token_count, 1)
+        print(f"epoch {epoch}: train loss={final_train_loss:.4f}; validation loss={validation_loss:.4f}")
 
-            if global_step % 10 == 0 or global_step == total_steps:
-                print(f"  Epoch {epoch}/{epochs} | Step {global_step:03d}/{total_steps} | SFT Loss: {loss.item():.4f} | LR: {lr:.2e}")
+    tok = Tokenizer.from_file(tokenizer_path)
+    test_prompt = "<|im_start|>system\nYou are Pixi, a friendly and intelligent English AI assistant.<|im_end|>\n<|im_start|>user\nHello! Who are you?<|im_end|>\n<|im_start|>assistant\n"
+    ids = tok.encode(test_prompt).ids
+    with torch.inference_mode():
+        response = generate_chat(model, ids, max_new_tokens=64, temperature=0.0, top_p=0.9, device=device)
+    print(f"[Sample] {tok.decode(response)}")
 
-        avg_epoch_loss = epoch_loss / len(loader)
-        print(f"--> Completed Epoch {epoch}/{epochs} | Average Loss: {avg_epoch_loss:.4f}")
-
-    elapsed = time.time() - t0
-    print(f"\n[4/5] Fine-Tuning completed in {elapsed:.1f}s ({elapsed/total_steps:.2f}s per step)")
-
-    # 4. Save Fine-Tuned PyTorch Checkpoint
     os.makedirs(os.path.dirname(output_checkpoint), exist_ok=True)
-    save_dict = {
+    torch.save({
         "model_state_dict": model.state_dict(),
         "config": config,
-        "loss": avg_epoch_loss
-    }
-    torch.save(save_dict, output_checkpoint)
-    print(f"  Saved SFT checkpoint: {output_checkpoint} ({os.path.getsize(output_checkpoint)/(1024**2):.2f} MB)")
-
-    # 5. Export to Quantized GGUF Container
-    print(f"\n[5/5] Exporting fine-tuned model to GGUF Q8_0: {output_gguf}...")
+        "loss": final_train_loss,
+        "validation_loss": validation_loss,
+        "sft_data": "OpenAssistant/oasst1@fdf72ae0827c1cda404aff25b6603abec9e3399b",
+        "train_examples": len(train_data),
+        "validation_examples": len(val_data),
+    }, output_checkpoint)
+    print(f"[Saved] {output_checkpoint}")
     os.makedirs(os.path.dirname(output_gguf), exist_ok=True)
     export_to_gguf_q8_0(model, out_path=output_gguf)
+    print(f"[Saved] {output_gguf}")
+    print(f"[Time] {time.time() - started:.1f}s")
 
-    # 6. Quick Verification Prompt
-    tok = Tokenizer.from_file(tokenizer_path)
-    test_prompt = "<|im_start|>user\nHello! Who are you?<|im_end|>\n<|im_start|>assistant\n"
-    test_ids = tok.encode(test_prompt).ids
-    print(f"\n[Verification] Generating response to: '{test_prompt.strip()}'...")
-    response_ids = generate_chat(model, test_ids, max_new_tokens=64, temperature=0.7, top_p=0.9, device=device)
-    print(f"[Pixi Response]: {tok.decode(response_ids)}")
-    print("=" * 70)
-    print("🎉 SFT Training & GGUF Export Complete! You can now chat with Pixi!")
-    print("=" * 70)
 
 if __name__ == "__main__":
     run_sft()
-

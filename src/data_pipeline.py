@@ -76,20 +76,29 @@ class ShardedMemmapDataset(Dataset):
         return chunk[:-1], chunk[1:]
 
 class ShardedDirectoryDataset(Dataset):
-    """Memory-mapped reader iterating across multiple pre-tokenized binary shards in a directory."""
-    def __init__(self, shard_glob: str, seq_len: int = 1024):
+    """Memory-mapped reader over token shards, with optional held-out shard exclusion."""
+    def __init__(self, shard_glob: str, seq_len: int = 1024, exclude_files=None):
         self.seq_len = seq_len
-        self.files = sorted(glob.glob(shard_glob))
+        excluded = {os.path.normcase(os.path.abspath(path)) for path in (exclude_files or [])}
+        self.files = [
+            path for path in sorted(glob.glob(shard_glob))
+            if os.path.normcase(os.path.abspath(path)) not in excluded
+            and os.path.getsize(path) // np.dtype(np.uint16).itemsize > seq_len
+        ]
         assert len(self.files) > 0, f"No binary shards found matching pattern: {shard_glob}"
 
         self.shards = [np.memmap(f, dtype=np.uint16, mode="r") for f in self.files]
         self.shard_samples = [(len(s) - 1) // seq_len for s in self.shards]
         self.total_samples = sum(self.shard_samples)
+        if self.total_samples == 0:
+            raise ValueError(f"No complete {seq_len}-token samples found in: {shard_glob}")
 
     def __len__(self) -> int:
         return self.total_samples
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        if idx < 0 or idx >= self.total_samples:
+            raise IndexError(idx)
         shard_idx = 0
         while idx >= self.shard_samples[shard_idx]:
             idx -= self.shard_samples[shard_idx]

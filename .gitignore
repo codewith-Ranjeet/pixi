@@ -27,6 +27,10 @@ checkpoints/pretrain/*.pt
 *.safetensors
 !data/*.jsonl
 !data/*.txt
+data/chat_sft_*_train.jsonl
+data/chat_sft_*_validation.jsonl
+data/sft_*_train.jsonl
+data/sft_*_validation.jsonl
 
 # Large Pre-training Binary Shards
 data/pretrain_bins/
@@ -50,6 +54,7 @@ cpp/*.exe
 
 # Training Logs & Profiling
 *.log
+result/
 checkpoints/**/metrics.csv
 *.pt.tmp
 wandb/

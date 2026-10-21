@@ -4,7 +4,7 @@ from src.model import Pixi, PixiConfig
 from src.export_and_infer import generate_chat
 
 
-CHECKPOINT = "checkpoints/pretrain_next/pixi_step_10000.pt"
+CHECKPOINT = "checkpoints/old_pretrain/pixi_step_10000_session3.pt"
 TOKENIZER_PATH = "tokenizer/tokenizer.json"
 
 
@@ -69,8 +69,8 @@ def main():
                 model,
                 prompt_ids,
                 max_new_tokens=128,
-                temperature=0.0,
-                top_p=1.0,
+                temperature=0.8,
+                top_p=0.9,
                 device=device,
             )
 

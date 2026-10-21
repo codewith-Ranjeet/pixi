@@ -30,7 +30,9 @@ checkpoints/pretrain/*.pt
 
 # Large Pre-training Binary Shards
 data/pretrain_bins/
+data/_oasst_hub_cache/
 *.bin
+tokenizer/tokenizer_new.json
 
 # GGUF / GGML Model Binaries
 models/*.gguf
@@ -48,6 +50,8 @@ cpp/*.exe
 
 # Training Logs & Profiling
 *.log
+checkpoints/**/metrics.csv
+*.pt.tmp
 wandb/
 .system_generated/
 
@@ -64,5 +68,3 @@ Thumbs.db
 desktop.ini
 
 # Private or unreviewed training datasets
-data/chat_sft.jsonl
-data/raw_corpus.txt

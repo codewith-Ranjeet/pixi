@@ -1,0 +1,783 @@
+{
+  "schema_version": 1,
+  "description": "Sourced local reference facts for Pixi, including common geography, science, and country capitals. Pixi does not fetch the internet at chat time.",
+  "facts": [
+    {
+      "id": "water_formula",
+      "question": "What is the chemical formula for water?",
+      "answer": "Water's molecular formula is H2O.",
+      "keywords": [
+        "chemical formula water H2O",
+        "molecular formula",
+        "hydrogen oxygen"
+      ],
+      "source_title": "PubChem: Water",
+      "source_url": "https://pubchem.ncbi.nlm.nih.gov/compound/water"
+    },
+    {
+      "id": "sun_center",
+      "question": "What star is at the center of our solar system?",
+      "answer": "The Sun is the star at the center of our solar system.",
+      "keywords": [
+        "Sun center solar system star",
+        "planets orbit the Sun"
+      ],
+      "source_title": "NASA: Our Sun—Facts",
+      "source_url": "https://science.nasa.gov/sun/facts/"
+    },
+    {
+      "id": "solar_planet_count",
+      "question": "How many planets are in our solar system?",
+      "answer": "Our solar system has eight planets.",
+      "keywords": [
+        "solar system eight planets count"
+      ],
+      "source_title": "NASA: Solar System Facts",
+      "source_url": "https://science.nasa.gov/solar-system/solar-system-facts/"
+    },
+    {
+      "id": "planet_order",
+      "question": "What is the order of the planets from the Sun?",
+      "answer": "In order outward from the Sun, the planets are Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune.",
+      "keywords": [
+        "planet order from Sun Mercury Venus Earth Mars Jupiter Saturn Uranus Neptune"
+      ],
+      "source_title": "NASA: About the Planets",
+      "source_url": "https://science.nasa.gov/solar-system/planets/"
+    },
+    {
+      "id": "earth_moon",
+      "question": "What is Earth's natural satellite?",
+      "answer": "Earth's natural satellite is the Moon; Earth has one moon.",
+      "keywords": [
+        "Earth one natural satellite Moon moon"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "earth_position",
+      "question": "Which planet is third from the Sun?",
+      "answer": "Earth is the third planet from the Sun.",
+      "keywords": [
+        "Earth third planet from Sun position"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "closest_planet",
+      "question": "Which planet is closest to the Sun?",
+      "answer": "Mercury is the closest planet to the Sun.",
+      "keywords": [
+        "Mercury closest planet Sun nearest"
+      ],
+      "source_title": "NASA: About the Planets",
+      "source_url": "https://science.nasa.gov/solar-system/planets/"
+    },
+    {
+      "id": "jupiter_largest",
+      "question": "Which is the largest planet in our solar system?",
+      "answer": "Jupiter is the largest planet in our solar system.",
+      "keywords": [
+        "Jupiter largest biggest planet solar system"
+      ],
+      "source_title": "NASA: Our Sun—Facts",
+      "source_url": "https://science.nasa.gov/sun/facts/"
+    },
+    {
+      "id": "inner_planet_moons",
+      "question": "Which planets in our solar system have no moons?",
+      "answer": "Mercury and Venus have no moons.",
+      "keywords": [
+        "Mercury Venus no moons natural satellites"
+      ],
+      "source_title": "NASA: Solar System Facts",
+      "source_url": "https://science.nasa.gov/solar-system/solar-system-facts/"
+    },
+    {
+      "id": "water_phase_points",
+      "question": "At what Celsius temperatures does pure water freeze and boil at standard pressure?",
+      "answer": "At one standard atmosphere, water freezes at 0°C and boils at 100°C.",
+      "keywords": [
+        "water freezing point 0 Celsius boiling point 100 Celsius standard pressure atmosphere"
+      ],
+      "source_title": "U.S. National Weather Service: Measuring Temperature",
+      "source_url": "https://www.weather.gov/media/zhu/ZHU_Training_Page/winds/pressure_winds/Temp_Density_Pressure.pdf"
+    },
+    {
+      "id": "pacific_largest_ocean",
+      "question": "What is the largest ocean on Earth?",
+      "answer": "The Pacific Ocean is the largest ocean on Earth.",
+      "keywords": [
+        "Pacific largest ocean Earth"
+      ],
+      "source_title": "U.S. Geological Survey: Frequently Asked Questions About Crater Lake (PDF)",
+      "source_url": "https://pubs.usgs.gov/of/1998/0507a/report.pdf"
+    },
+    {
+      "id": "moon_distance",
+      "question": "How far is the Moon from Earth on average?",
+      "answer": "The Moon is about 384,400 kilometers from Earth on average.",
+      "keywords": [
+        "Moon average distance Earth 384400 kilometers km"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "france_capital",
+      "question": "What is the capital of France?",
+      "answer": "Paris is the capital of France.",
+      "keywords": [
+        "capital France Paris city"
+      ],
+      "source_title": "European Union: France",
+      "source_url": "https://european-union.europa.eu/principles-countries-history/eu-countries/france_en"
+    },
+    {
+      "id": "japan_capital",
+      "question": "What is the capital of Japan?",
+      "answer": "Tokyo is the capital of Japan.",
+      "keywords": [
+        "capital Japan Tokyo city"
+      ],
+      "source_title": "The Government of Japan: JapanGov",
+      "source_url": "https://www.japan.go.jp/japan/index.html"
+    },
+    {
+      "id": "india_capital",
+      "question": "What is the capital of India?",
+      "answer": "New Delhi is the capital of India.",
+      "keywords": [
+        "capital India New Delhi Delhi city"
+      ],
+      "source_title": "Delhi Tourism: New Delhi",
+      "source_url": "https://delhitourism.gov.in/aboutus/new-delhi.html"
+    },
+    {
+      "id": "russia_capital",
+      "question": "What is the capital of Russia?",
+      "answer": "Moscow is the capital of the Russian Federation.",
+      "keywords": [
+        "capital Russia Russian Federation Moscow city"
+      ],
+      "source_title": "Russian Ministry of Foreign Affairs: Constitution (English PDF)",
+      "source_url": "https://mid.ru/upload/medialibrary/fa3/xwhwumdwunawy9iprvhcxdqds1lzxqdx/CONSTITUTION-Eng.pdf"
+    },
+    {
+      "id": "china_capital",
+      "question": "What is the capital of China?",
+      "answer": "Beijing is the capital of the People's Republic of China.",
+      "keywords": [
+        "capital China People's Republic Beijing city"
+      ],
+      "source_title": "International Web Portal of Beijing: Facts",
+      "source_url": "https://english.beijing.gov.cn/beijinginfo/abstract/202005/t20200512_1895468.html"
+    },
+    {
+      "id": "capital_australia",
+      "question": "What is the capital of Australia?",
+      "answer": "Canberra is the capital of Australia.",
+      "keywords": [
+        "capital Australia Canberra city",
+        "Australia"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_united_states",
+      "question": "What is the capital of United States?",
+      "answer": "Washington, D.C. is the capital of United States.",
+      "keywords": [
+        "capital United States Washington, D.C. city",
+        "US",
+        "USA",
+        "America"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_brazil",
+      "question": "What is the capital of Brazil?",
+      "answer": "Brasília is the capital of Brazil.",
+      "keywords": [
+        "capital Brazil Brasília city",
+        "Brazil"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_canada",
+      "question": "What is the capital of Canada?",
+      "answer": "Ottawa is the capital of Canada.",
+      "keywords": [
+        "capital Canada Ottawa city",
+        "Canada"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_mexico",
+      "question": "What is the capital of Mexico?",
+      "answer": "Mexico City is the capital of Mexico.",
+      "keywords": [
+        "capital Mexico Mexico City city",
+        "Mexico"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_argentina",
+      "question": "What is the capital of Argentina?",
+      "answer": "Buenos Aires is the capital of Argentina.",
+      "keywords": [
+        "capital Argentina Buenos Aires city",
+        "Argentina"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_chile",
+      "question": "What is the capital of Chile?",
+      "answer": "Santiago is the capital of Chile.",
+      "keywords": [
+        "capital Chile Santiago city",
+        "Chile"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_colombia",
+      "question": "What is the capital of Colombia?",
+      "answer": "Bogotá is the capital of Colombia.",
+      "keywords": [
+        "capital Colombia Bogotá city",
+        "Colombia"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_peru",
+      "question": "What is the capital of Peru?",
+      "answer": "Lima is the capital of Peru.",
+      "keywords": [
+        "capital Peru Lima city",
+        "Peru"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_united_kingdom",
+      "question": "What is the capital of United Kingdom?",
+      "answer": "London is the capital of United Kingdom.",
+      "keywords": [
+        "capital United Kingdom London city",
+        "UK",
+        "Britain",
+        "Great Britain"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_germany",
+      "question": "What is the capital of Germany?",
+      "answer": "Berlin is the capital of Germany.",
+      "keywords": [
+        "capital Germany Berlin city",
+        "Germany"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_italy",
+      "question": "What is the capital of Italy?",
+      "answer": "Rome is the capital of Italy.",
+      "keywords": [
+        "capital Italy Rome city",
+        "Italy"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_spain",
+      "question": "What is the capital of Spain?",
+      "answer": "Madrid is the capital of Spain.",
+      "keywords": [
+        "capital Spain Madrid city",
+        "Spain"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_portugal",
+      "question": "What is the capital of Portugal?",
+      "answer": "Lisbon is the capital of Portugal.",
+      "keywords": [
+        "capital Portugal Lisbon city",
+        "Portugal"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_netherlands",
+      "question": "What is the capital of Netherlands?",
+      "answer": "Amsterdam is the capital of Netherlands.",
+      "keywords": [
+        "capital Netherlands Amsterdam city",
+        "Holland"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_switzerland",
+      "question": "What is the capital of Switzerland?",
+      "answer": "Bern is the capital of Switzerland.",
+      "keywords": [
+        "capital Switzerland Bern city",
+        "Switzerland"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_sweden",
+      "question": "What is the capital of Sweden?",
+      "answer": "Stockholm is the capital of Sweden.",
+      "keywords": [
+        "capital Sweden Stockholm city",
+        "Sweden"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_norway",
+      "question": "What is the capital of Norway?",
+      "answer": "Oslo is the capital of Norway.",
+      "keywords": [
+        "capital Norway Oslo city",
+        "Norway"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_poland",
+      "question": "What is the capital of Poland?",
+      "answer": "Warsaw is the capital of Poland.",
+      "keywords": [
+        "capital Poland Warsaw city",
+        "Poland"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_ukraine",
+      "question": "What is the capital of Ukraine?",
+      "answer": "Kyiv is the capital of Ukraine.",
+      "keywords": [
+        "capital Ukraine Kyiv city",
+        "Ukraine"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_turkey",
+      "question": "What is the capital of Turkey?",
+      "answer": "Ankara is the capital of Turkey.",
+      "keywords": [
+        "capital Turkey Ankara city",
+        "Türkiye"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_saudi_arabia",
+      "question": "What is the capital of Saudi Arabia?",
+      "answer": "Riyadh is the capital of Saudi Arabia.",
+      "keywords": [
+        "capital Saudi Arabia Riyadh city",
+        "Saudi"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_united_arab_emirates",
+      "question": "What is the capital of United Arab Emirates?",
+      "answer": "Abu Dhabi is the capital of United Arab Emirates.",
+      "keywords": [
+        "capital United Arab Emirates Abu Dhabi city",
+        "UAE",
+        "Emirates"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_nigeria",
+      "question": "What is the capital of Nigeria?",
+      "answer": "Abuja is the capital of Nigeria.",
+      "keywords": [
+        "capital Nigeria Abuja city",
+        "Nigeria"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_egypt",
+      "question": "What is the capital of Egypt?",
+      "answer": "Cairo is the capital of Egypt.",
+      "keywords": [
+        "capital Egypt Cairo city",
+        "Egypt"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_ethiopia",
+      "question": "What is the capital of Ethiopia?",
+      "answer": "Addis Ababa is the capital of Ethiopia.",
+      "keywords": [
+        "capital Ethiopia Addis Ababa city",
+        "Ethiopia"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_kenya",
+      "question": "What is the capital of Kenya?",
+      "answer": "Nairobi is the capital of Kenya.",
+      "keywords": [
+        "capital Kenya Nairobi city",
+        "Kenya"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_pakistan",
+      "question": "What is the capital of Pakistan?",
+      "answer": "Islamabad is the capital of Pakistan.",
+      "keywords": [
+        "capital Pakistan Islamabad city",
+        "Pakistan"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_bangladesh",
+      "question": "What is the capital of Bangladesh?",
+      "answer": "Dhaka is the capital of Bangladesh.",
+      "keywords": [
+        "capital Bangladesh Dhaka city",
+        "Bangladesh"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_vietnam",
+      "question": "What is the capital of Vietnam?",
+      "answer": "Hanoi is the capital of Vietnam.",
+      "keywords": [
+        "capital Vietnam Hanoi city",
+        "Vietnam"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_thailand",
+      "question": "What is the capital of Thailand?",
+      "answer": "Bangkok is the capital of Thailand.",
+      "keywords": [
+        "capital Thailand Bangkok city",
+        "Thailand"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_malaysia",
+      "question": "What is the capital of Malaysia?",
+      "answer": "Kuala Lumpur is the capital of Malaysia.",
+      "keywords": [
+        "capital Malaysia Kuala Lumpur city",
+        "Malaysia"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_singapore",
+      "question": "What is the capital of Singapore?",
+      "answer": "Singapore is the capital of Singapore.",
+      "keywords": [
+        "capital Singapore Singapore city",
+        "Singapore"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_new_zealand",
+      "question": "What is the capital of New Zealand?",
+      "answer": "Wellington is the capital of New Zealand.",
+      "keywords": [
+        "capital New Zealand Wellington city",
+        "NZ"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_greece",
+      "question": "What is the capital of Greece?",
+      "answer": "Athens is the capital of Greece.",
+      "keywords": [
+        "capital Greece Athens city",
+        "Greece"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_ireland",
+      "question": "What is the capital of Ireland?",
+      "answer": "Dublin is the capital of Ireland.",
+      "keywords": [
+        "capital Ireland Dublin city",
+        "Ireland"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_austria",
+      "question": "What is the capital of Austria?",
+      "answer": "Vienna is the capital of Austria.",
+      "keywords": [
+        "capital Austria Vienna city",
+        "Austria"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_belgium",
+      "question": "What is the capital of Belgium?",
+      "answer": "Brussels is the capital of Belgium.",
+      "keywords": [
+        "capital Belgium Brussels city",
+        "Belgium"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_finland",
+      "question": "What is the capital of Finland?",
+      "answer": "Helsinki is the capital of Finland.",
+      "keywords": [
+        "capital Finland Helsinki city",
+        "Finland"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_iraq",
+      "question": "What is the capital of Iraq?",
+      "answer": "Baghdad is the capital of Iraq.",
+      "keywords": [
+        "capital Iraq Baghdad city",
+        "Iraq"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_morocco",
+      "question": "What is the capital of Morocco?",
+      "answer": "Rabat is the capital of Morocco.",
+      "keywords": [
+        "capital Morocco Rabat city",
+        "Morocco"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_ghana",
+      "question": "What is the capital of Ghana?",
+      "answer": "Accra is the capital of Ghana.",
+      "keywords": [
+        "capital Ghana Accra city",
+        "Ghana"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_uganda",
+      "question": "What is the capital of Uganda?",
+      "answer": "Kampala is the capital of Uganda.",
+      "keywords": [
+        "capital Uganda Kampala city",
+        "Uganda"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_algeria",
+      "question": "What is the capital of Algeria?",
+      "answer": "Algiers is the capital of Algeria.",
+      "keywords": [
+        "capital Algeria Algiers city",
+        "Algeria"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_philippines",
+      "question": "What is the capital of Philippines?",
+      "answer": "Manila is the capital of Philippines.",
+      "keywords": [
+        "capital Philippines Manila city",
+        "Philippines"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_south_korea",
+      "question": "What is the capital of South Korea?",
+      "answer": "Seoul is the capital of South Korea.",
+      "keywords": [
+        "capital South Korea Seoul city",
+        "Korea",
+        "Republic of Korea"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_iran",
+      "question": "What is the capital of Iran?",
+      "answer": "Tehran is the capital of Iran.",
+      "keywords": [
+        "capital Iran Tehran city",
+        "Iran"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_tanzania",
+      "question": "What is the capital of Tanzania?",
+      "answer": "Dodoma is the capital of Tanzania.",
+      "keywords": [
+        "capital Tanzania Dodoma city",
+        "Tanzania"
+      ],
+      "source_title": "REST Countries: country capitals data",
+      "source_url": "https://raw.githubusercontent.com/restcountries/restcountries/master/src/main/resources/countriesV2.json"
+    },
+    {
+      "id": "capital_south_africa",
+      "question": "What are the capitals of South Africa?",
+      "answer": "South Africa has three capitals: Pretoria is administrative, Cape Town is legislative, and Bloemfontein is judicial.",
+      "keywords": [
+        "capital South Africa Pretoria administrative Cape Town legislative Bloemfontein judicial"
+      ],
+      "source_title": "South African Government: South Africa provinces",
+      "source_url": "https://www.gov.za/about-sa/south-africas-provinces"
+    },
+    {
+      "id": "earth_day_year",
+      "question": "How long does Earth take to rotate and orbit the Sun?",
+      "answer": "Earth rotates once in about 23.9 hours and completes one orbit around the Sun in about 365.25 days.",
+      "keywords": [
+        "Earth day rotation 23.9 hours orbit year 365.25 days"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "earth_ocean_coverage",
+      "question": "How much of Earth is covered by ocean?",
+      "answer": "The global ocean covers about 71% of Earth surface.",
+      "keywords": [
+        "Earth ocean covers 71 percent surface water"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "earth_atmosphere",
+      "question": "What are the main gases in the atmosphere?",
+      "answer": "Near the surface, Earth atmosphere is about 78% nitrogen and 21% oxygen, with roughly 1% other gases.",
+      "keywords": [
+        "Earth atmosphere air nitrogen 78 oxygen 21 percent gases"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "sunlight_travel_time",
+      "question": "How long does sunlight take to reach Earth?",
+      "answer": "Sunlight takes about eight minutes to reach Earth.",
+      "keywords": [
+        "Sun light sunlight travel time reach Earth eight minutes"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "earth_sun_distance",
+      "question": "How far is Earth from the Sun on average?",
+      "answer": "Earth is about 150 million kilometers (93 million miles) from the Sun on average.",
+      "keywords": [
+        "Earth average distance Sun 150 million kilometers 93 million miles astronomical unit"
+      ],
+      "source_title": "NASA: Facts About Earth",
+      "source_url": "https://science.nasa.gov/earth/facts/"
+    },
+    {
+      "id": "sun_only_star",
+      "question": "Is the Sun the only star in our solar system?",
+      "answer": "Yes. The Sun is the only star in our solar system.",
+      "keywords": [
+        "Sun only star solar system"
+      ],
+      "source_title": "NASA: Our Sun—Facts",
+      "source_url": "https://science.nasa.gov/sun/facts/"
+    }
+  ]
+}

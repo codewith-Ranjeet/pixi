@@ -1,37 +1,36 @@
 # Pixi-40M
 
-Pixi is an experimental decoder-only Transformer implemented in PyTorch. It has about 40.5 million parameters and a 1,024-token context window. **The current model is a research prototype and does not yet generate reliable conversational answers.** Its latest SFT checkpoint still repeats phrases; a lower validation loss has not translated into good chat quality.
+Pixi is an experimental decoder-only Transformer implemented in PyTorch. It has about 40.5 million parameters and a 1,024-token context window. **It is a research prototype, not a reliable general-purpose assistant.** The latest SFT checkpoint can repeat text and produce inaccurate answers. A lower training or validation loss does not establish chat quality.
 
-## Project structure
+## Project contents
 
 ```text
-configs/model_config.json             Model configuration
-src/                                  Model, data pipeline, optimizer, GGUF export
-scripts/prepare_data.py               Build pretraining token shards
-scripts/prepare_oasst_sft.py          Prepare OASST1 train and validation splits
-scripts/train_pretrain.py             Pretrain with held-out loss reporting
-scripts/train_sft.py                  Fine-tune from the final pretraining checkpoint
-scripts/train_tokenizer.py            Train a separate candidate tokenizer
-scripts/test_tokenizer.py             Check the active tokenizer's round trips
-chat.py                               Interactive multi-turn chat
-chat_base.py                          Base-model text completion
-tokenizer/tokenizer.json              Active tokenizer; keep paired with checkpoints/data
-data/pretrain_bins/                   Tokenized pretraining corpus
-data/chat_sft_oasst1_*.jsonl          Filtered SFT train/validation data
-checkpoints/pretrain_next/pixi_step_10000.pt
-                                      Final base-model checkpoint
-checkpoints/pixi_chat_sft_pretrain_next.pt
-                                      SFT checkpoint produced from the next pretraining run
-models/pixi-40m-chat-oasst1-q8_0.gguf
-                                      GGUF export of selected SFT checkpoint
-cpp/pixi_infer.cpp                    Optional native inference source
+configs/model_config.json                  Model configuration
+src/                                       Model, data pipeline, trainer, and GGUF exporter
+scripts/train_sft.py                       Supervised fine-tuning
+scripts/prepare_ultrachat_sft.py            Prepare the pinned UltraChat subset
+scripts/evaluate_sft.py                    Deterministic prompt benchmark
+scripts/test_tokenizer.py                  Tokenizer round-trip check
+scripts/prepare_data.py                    Legacy pretraining-data preparation
+scripts/train_pretrain.py                  Legacy pretraining trainer
+chat.py                                    Interactive chat with calculator and fact lookup
+chat_base.py                               Base-model text completion
+tokenizer/tokenizer.json                   Active tokenizer; keep paired with checkpoints
+data/facts.json                            Local sourced facts used by chat.py
+data/chat_sft_ultrachat_*.jsonl            Local SFT data (ignored by Git)
+data/chat_sft_ultrachat_SOURCE.md           SFT dataset provenance
+data/pretrain_bins/                         Legacy pretraining shards; not needed for chat or SFT
+checkpoints/old_pretrain/                   Finished base-model checkpoints
+checkpoints/pixi_chat_sft_session10_final_v9.pt
+                                           Latest tested SFT checkpoint
+result/                                    Local training and prompt-response records (ignored by Git)
 ```
 
-Large datasets, checkpoints, and model exports are local artifacts and are not committed. Do not substitute a tokenizer without rebuilding the token shards and training a compatible model.
+The C++ inference prototype was removed. Python chat and training do not require GGUF exports or a `models/` directory. Large datasets and checkpoints are local artifacts and are not committed. Do not replace the tokenizer without also preparing compatible data and training compatible weights.
 
-## Setup and run
+## Install and chat
 
-From the project root in PowerShell:
+Run these commands from the project root in PowerShell:
 
 ```powershell
 python -m venv .venv
@@ -40,43 +39,60 @@ python -m pip install -r requirements.txt
 python chat.py
 ```
 
-The chat script loads `checkpoints/pixi_chat_sft_oasst1.pt` when available. Use `python chat_base.py` to inspect base-model continuation behavior. The current model may repeat text in either mode; temperature changes do not fix that underlying limitation.
-
-## Data and training
-
-The active SFT data is prepared from a pinned OpenAssistant/oasst1 revision. The filtering, license, revision, and row counts are recorded in [data/chat_sft_oasst1_SOURCE.md](data/chat_sft_oasst1_SOURCE.md). Prepared outputs are separate train and validation JSONL files. The preparation script refuses to overwrite existing outputs unless explicitly passed `--overwrite`.
-
-The pretraining shards under `data/pretrain_bins/` are checked against the active tokenizer before the trainer initializes. The last full shard is held out for validation; the small trailing shard is ignored. The trainer reports held-out loss, records metrics and the tokenizer hash, and writes checkpoints under the separate `checkpoints/pretrain_next/` directory. It refuses to overwrite existing outputs.
-
-Before committing GPU time, validate the current shards:
+With no `--checkpoint`, `chat.py` prefers `checkpoints/pixi_chat_sft_session10_final_v9.pt`. To select a checkpoint explicitly:
 
 ```powershell
-python scripts/train_pretrain.py --check-only
+python chat.py --checkpoint .\checkpoints\pixi_chat_sft_session10_final_v9.pt
 ```
 
-This scans token ranges and decodes sample windows using the active tokenizer. It does not initialize a model or train. If it passes, launch the default 10,000-step run with `python scripts/train_pretrain.py`. This is a long GPU job. The default processes about 655 million training tokens across about 450 million train tokens, cycling the train split as needed; one full shard (about 50 million tokens) is held out for validation.
+Use `python chat_base.py` to see raw base-model text completion. Temperature changes sampling but do not fix repetition or capability limits.
 
-To prepare fresh shards with a tokenizer-hash manifest, use a new output directory so existing shards remain intact:
+## Calculator and local fact lookup
+
+`chat.py` uses a restricted local calculator for supported arithmetic expressions and simple addition, subtraction, multiplication, and division phrasing. It does not execute user-provided Python code. Unsupported word problems are sent to the model and may be answered incorrectly.
+
+Fact lookup reads [`data/facts.json`](data/facts.json), which contains sourced common facts and country capitals. Pixi does not fetch facts from the internet at chat time. If a recognized fact has no local match, the default behavior is to decline rather than guess. `--allow-unverified-facts` permits a model answer marked unverified.
+
+Examples:
 
 ```powershell
-python scripts/prepare_data.py --output-dir data/pretrain_bins_next
-python scripts/train_pretrain.py --data-dir data/pretrain_bins_next
+python chat.py --checkpoint .\checkpoints\pixi_chat_sft_session10_final_v9.pt --temp 0
+python chat.py --checkpoint .\checkpoints\pixi_chat_sft_session10_final_v9.pt --allow-unverified-facts
 ```
 
-After pretraining, the final checkpoint is `checkpoints/pretrain_next/pixi_step_10000.pt`. The SFT trainer uses it by default and writes a new checkpoint/export with separate names; chat prefers that result when it exists.
+Use `--facts path\to\facts.json` to select another fact library, `--no-facts` to disable fact lookup, or `--no-calculator` to disable arithmetic. Verify sources before adding entries to `facts.json`.
 
-To fine-tune, first choose new output names or move the existing selected artifacts, because the trainer intentionally refuses to overwrite them:
+## SFT
+
+The prepared SFT set is a bounded subset of [HuggingFaceH4/ultrachat_200k](https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k). The source note records its pinned revision, filtering, counts, and tokenizer hash. The dialogues are synthetic according to the dataset card; inspect examples and do not assume their factual correctness.
+
+The prepared files are already present locally. To prepare them again, the output paths must not already exist; the script refuses to overwrite files:
+
+```powershell
+python scripts/prepare_ultrachat_sft.py
+```
+
+To run the default one-epoch SFT job:
 
 ```powershell
 python scripts/train_sft.py
 ```
 
-SFT uses one epoch by default and reports held-out loss. Loss alone is not a chat-quality guarantee. The selected checkpoint currently has a validation loss of about 2.80, compared with about 3.18 for the base checkpoint on the same split, but generated replies remain repetitive.
+By default, SFT starts from `checkpoints/old_pretrain/pixi_step_10000_session3.pt`, uses the UltraChat train/validation JSONL files, and saves `checkpoints/pixi_chat_sft_ultrachat.pt`. It refuses to overwrite an existing output checkpoint. The SFT dataset and base checkpoint must be present. The already trained `pixi_chat_sft_session10_final_v9.pt` is not overwritten by this command.
 
-## Configuration and native inference
+Compare checkpoints using the same evaluation suite and decoding settings. For example:
 
-Model dimensions are in [configs/model_config.json](configs/model_config.json). To build the optional C++ runner on a system with a compatible `g++`, run `cpp/compile.bat`; the generated executable is ignored by Git.
+```powershell
+python scripts/evaluate_sft.py --checkpoint .\checkpoints\pixi_chat_sft_session10_final_v9.pt --suite targeted --output .\result\SFT\session10_targeted.json
+python scripts/evaluate_sft.py --checkpoint .\checkpoints\pixi_chat_sft_session10_final_v9.pt --suite generalization --output .\result\SFT\session10_generalization.json
+```
+
+The benchmark is a small smoke test, not proof of broad reliability. Preserve training logs and prompt-response samples in `result/` for each run; those local records are ignored by Git.
+
+## Pretraining assets
+
+Pretraining is not part of the recommended workflow for this project. The existing `data/pretrain_bins/` shards and `scripts/prepare_data.py` / `scripts/train_pretrain.py` are legacy assets and are not needed for inference or future SFT from the retained base checkpoint. Since no more pretraining is planned, the shard directory may be removed to recover disk space. Keep `checkpoints/old_pretrain/` if you may fine-tune again; those checkpoints are SFT starting points.
 
 ## License
 
-Project code is licensed under Apache-2.0; see [LICENSE](LICENSE). Dataset licensing and provenance are documented separately in the SFT source note.
+Project code is licensed under Apache-2.0; see [LICENSE](LICENSE). Dataset licensing and provenance are documented in the UltraChat source note.
